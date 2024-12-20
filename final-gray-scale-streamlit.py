@@ -3,6 +3,7 @@ import numpy as np
 from datetime import datetime
 import streamlit as st
 from io import BytesIO
+import os
 
 # Use Streamlit's file uploader to allow image selection only once
 uploaded_file = st.sidebar.file_uploader("Choose a JPG image", type="jpg")
@@ -28,6 +29,9 @@ def main():
         # Load the image using OpenCV
         file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
         image = cv2.imdecode(file_bytes, 1)
+
+        # Extract the original file name without the extension
+        original_name = os.path.splitext(uploaded_file.name)[0]
 
         # User-defined adjustments
         h = st.sidebar.slider("Hue", min_value=0, max_value=360, value=30, step=1)
@@ -65,7 +69,7 @@ def main():
 
         # Save option with download button
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_filename = f"yellow_updated_{timestamp}.jpg"
+        output_filename = f"{original_name}_updated_{timestamp}.jpg"
 
         # Convert image to in-memory buffer for download
         is_success, buffer = cv2.imencode(".jpg", coerced_image)
