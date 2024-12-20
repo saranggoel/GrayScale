@@ -4,7 +4,7 @@ from datetime import datetime
 import streamlit as st
 
 # Use Streamlit's file uploader to allow image selection only once
-uploaded_file = st.sidebar.file_uploader("Choose a JPG image", type="jpg")
+uploaded_file = st.sidebar.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"])
 
 # Updated BGR grayscale values for mapping as a NumPy array
 bgr_values = np.array([
