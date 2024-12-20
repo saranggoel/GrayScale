@@ -2,8 +2,10 @@ import cv2
 import numpy as np
 from datetime import datetime
 import streamlit as st
-from tkinter import Tk, filedialog
-import os
+from io import BytesIO
+
+# Use Streamlit's file uploader to allow image selection only once
+uploaded_file = st.sidebar.file_uploader("Choose a JPG image", type="jpg")
 
 # Updated BGR grayscale values for mapping as a NumPy array
 bgr_values = np.array([
@@ -20,15 +22,9 @@ bgr_values = np.array([
     (0, 0, 0)
 ], dtype=np.uint8)
 
-
 def main():
-    # Use Streamlit's file uploader to allow image selection
-    uploaded_file = st.sidebar.file_uploader("Choose a JPG image", type="jpg")
-
+    # Only proceed if an image has been uploaded
     if uploaded_file is not None:
-        # Extract the original file name without the extension
-        original_name = os.path.splitext(uploaded_file.name)[0]
-
         # Load the image using OpenCV
         file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
         image = cv2.imdecode(file_bytes, 1)
@@ -67,32 +63,21 @@ def main():
         result_x = cv2.cvtColor(coerced_image, cv2.COLOR_BGR2RGB)
         st.image(result_x, caption="Final Image", use_column_width=False, output_format="JPEG")
 
-        # Save option with user-defined location
-        if st.button("Save Final Image"):
-            # Generate timestamp
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # Save option with download button
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_filename = f"yellow_updated_{timestamp}.jpg"
 
-            # Combine original name and timestamp for the save file name
-            initial_filename = f"{original_name}_updated_{timestamp}.jpg"
-
-            # Open a file dialog to choose save location
-            root = Tk()
-            root.withdraw()  # Hide the main tkinter window
-            root.attributes('-topmost', True)  # Bring dialog to the front
-            save_path = filedialog.asksaveasfilename(
-                defaultextension=".jpg",
-                filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
-                initialfile=initial_filename  # Use original file name and timestamp
+        # Convert image to in-memory buffer for download
+        is_success, buffer = cv2.imencode(".jpg", coerced_image)
+        if is_success:
+            st.download_button(
+                label="Download Final Image",
+                data=BytesIO(buffer),
+                file_name=output_filename,
+                mime="image/jpeg"
             )
-            root.destroy()
-
-            if save_path:
-                cv2.imwrite(save_path, coerced_image)
-                st.success(f"Final image saved successfully to {save_path}!")
-
     else:
         st.info("Please upload a JPG image to proceed.")
-
 
 if __name__ == "__main__":
     main()
