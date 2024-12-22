@@ -6,6 +6,7 @@ from io import BytesIO
 from sklearn.cluster import KMeans
 import os
 
+# xx
 # Use Streamlit's file uploader to allow image selection only once
 uploaded_file = st.sidebar.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"])
 
