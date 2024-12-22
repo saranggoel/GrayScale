@@ -6,7 +6,6 @@ from io import BytesIO
 from sklearn.cluster import KMeans
 import os
 
-# xx
 # Use Streamlit's file uploader to allow image selection only once
 uploaded_file = st.sidebar.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"])
 
@@ -27,7 +26,7 @@ def main():
 
         start_value = st.sidebar.slider("Start Value", min_value=0, max_value=255, value=50, step=1)
         skip_d = st.sidebar.slider("Skip (d)", min_value=1, max_value=50, value=5, step=1)
-        draw_borders = st.sidebar.checkbox("Draw Black Borders Around Groups", value=True)
+        draw_borders = st.sidebar.checkbox("Draw Black Borders Around Groups", value=False)
         min_contour_area = st.sidebar.slider("Minimum Contour Area", min_value=100, max_value=5000, value=100, step=100)
         border_thickness = st.sidebar.slider("Border Thickness", min_value=1, max_value=10, value=2, step=1)
 
@@ -66,9 +65,14 @@ def main():
         # Combine centroids and additional values
         final_values = np.sort(np.concatenate((centroids, [0, 255], selected_centroids)))
 
-        # Vectorized mapping
-        diff_matrix = np.abs(gray_image[:, :, None] - final_values)
-        coerced_image = final_values[np.argmin(diff_matrix, axis=2)]
+        # Non-vectorized mapping (instead of diff_matrix)
+        coerced_image = np.zeros_like(gray_image)
+        for i in range(gray_image.shape[0]):
+            for j in range(gray_image.shape[1]):
+                pixel_value = gray_image[i, j]
+                # Find closest value in final_values without broadcasting
+                closest_value = min(final_values, key=lambda x: abs(x - pixel_value))
+                coerced_image[i, j] = closest_value
 
         # Convert coerced image to BGR
         coerced_bgr_image = cv2.cvtColor(coerced_image.astype(np.uint8), cv2.COLOR_GRAY2BGR)
