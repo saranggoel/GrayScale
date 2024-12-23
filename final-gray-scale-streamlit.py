@@ -25,7 +25,7 @@ def main():
         new_dims = (int(image.shape[1] * scale_percent / 100), int(image.shape[0] * scale_percent / 100))
         image = cv2.resize(image, new_dims, interpolation=cv2.INTER_AREA)
 
-        # Convert to grayscale and flatten
+        # Convert to grayscale
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         pixel_values = gray_image.flatten()
 
@@ -37,9 +37,19 @@ def main():
         # Combine centroids with additional values
         final_values = np.sort(np.concatenate((centroids, [0, 255])))
 
-        # Vectorized mapping to closest values
-        diff_matrix = np.abs(gray_image[:, :, None] - final_values)
-        coerced_image = final_values[np.argmin(diff_matrix, axis=2)]
+        # Mapping to closest values without vectorization
+        coerced_image = np.zeros_like(gray_image)
+        for i in range(gray_image.shape[0]):
+            for j in range(gray_image.shape[1]):
+                pixel_value = gray_image[i, j]
+                closest_value = final_values[0]
+                min_diff = abs(pixel_value - final_values[0])
+                for value in final_values:
+                    diff = abs(pixel_value - value)
+                    if diff < min_diff:
+                        closest_value = value
+                        min_diff = diff
+                coerced_image[i, j] = closest_value
 
         # Convert to BGR for display and output
         coerced_bgr_image = cv2.cvtColor(coerced_image.astype(np.uint8), cv2.COLOR_GRAY2BGR)
